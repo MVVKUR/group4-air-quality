@@ -1,33 +1,84 @@
-# podman-compose up -d --build
+# ChildAir — three-service stack.
 #
-# Brings up the Jakarta Air dashboard on http://<host>/ (port 80).
-# Run with sudo for rootful binding to port 80:
-#   sudo podman-compose up -d --build
-# Set VITE_WAQI_TOKEN in a .env file alongside this file before building.
+# Quickstart:
+#   cp .env.example .env && edit WAQI_TOKEN
+#   podman-compose up -d --build
+#
+# Reach the app:
+#   http://localhost:8080/           — SPA
+#   http://localhost:8080/api/v1/docs — Swagger UI (proxied through nginx)
+#
+# nginx in `web` reverse-proxies /api/* to the api service. The api container
+# applies Alembic migrations on every boot and runs the ingestion scheduler.
 version: "3.9"
 
 services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    container_name: childair-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-childair}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-childair}
+      POSTGRES_DB: ${POSTGRES_DB:-childair}
+    volumes:
+      - childair-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-childair} -d ${POSTGRES_DB:-childair}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      app: childair
+
+  api:
+    image: childair-api:latest
+    build:
+      context: ./backend
+      dockerfile: Containerfile
+    container_name: childair-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-childair}:${POSTGRES_PASSWORD:-childair}@db:5432/${POSTGRES_DB:-childair}
+      WAQI_TOKEN: ${WAQI_TOKEN:-}
+      SCHEDULER_INTERVAL_MIN: ${SCHEDULER_INTERVAL_MIN:-10}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    labels:
+      app: childair
+
   web:
-    image: jakarta-air:latest
+    image: childair-web:latest
     build:
       context: .
       dockerfile: Containerfile
-      args:
-        # Read from the .env file at deploy time, baked into the static
-        # bundle. Falls back to empty (demo mode) if unset.
-        VITE_WAQI_TOKEN: ${VITE_WAQI_TOKEN:-}
-    container_name: jakarta-air
+    container_name: childair-web
     restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
     ports:
-      # Host:container — using unprivileged 8080 so port 80 stays free
-      # for other services on the host. Cloudflare tunnel routes here.
-      - "8080:80"
+      # Host:container — 8082 to avoid clashing with other developer stacks
+      # on the same VM. Cloudflare tunnel should proxy to localhost:8082.
+      - "8082:80"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1/"]
       interval: 30s
       timeout: 3s
-      start_period: 10s
       retries: 3
+      start_period: 10s
     labels:
-      app: jakarta-air
+      app: childair
       maintainer: "softopen24@gmail.com"
+
+volumes:
+  childair-db-data:

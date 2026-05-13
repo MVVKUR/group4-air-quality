@@ -14,13 +14,12 @@ import { Card, CardHeader, CardTitle } from '@/components/shared/Card';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { aqiHexFor } from '@/lib/aqi-utils';
 import { fetchOpenMeteoHourlyHistory } from '@/lib/openmeteo-api';
-import { JAKARTA_CENTER, REFRESH_INTERVAL_MS, STALE_TIME_MS } from '@/lib/constants';
+import { REFRESH_INTERVAL_MS, STALE_TIME_MS } from '@/lib/constants';
 
 interface TrendChartProps {
   currentAqi: number;
-  /** Optional explicit coordinate; defaults to Jakarta city center. */
-  lat?: number;
-  lon?: number;
+  /** Station id whose 24-hour history to plot. */
+  stationId: number;
 }
 
 interface ChartDatum {
@@ -29,15 +28,13 @@ interface ChartDatum {
   aqi: number;
 }
 
-export function TrendChart({ currentAqi, lat, lon }: TrendChartProps) {
-  const latitude = lat ?? (JAKARTA_CENTER as [number, number])[0];
-  const longitude = lon ?? (JAKARTA_CENTER as [number, number])[1];
-
+export function TrendChart({ currentAqi, stationId }: TrendChartProps) {
   const { data: history, isLoading } = useQuery({
-    queryKey: ['openmeteo', 'history', latitude, longitude],
-    queryFn: ({ signal }) => fetchOpenMeteoHourlyHistory(latitude, longitude, signal),
+    queryKey: ['history', stationId],
+    queryFn: ({ signal }) => fetchOpenMeteoHourlyHistory(stationId, signal),
     staleTime: STALE_TIME_MS,
     refetchInterval: REFRESH_INTERVAL_MS,
+    enabled: Number.isFinite(stationId),
   });
 
   const data: ChartDatum[] = useMemo(() => {

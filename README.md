@@ -1,7 +1,9 @@
-# Jakarta Air · Live AQI
+# ChildAir · Live AQI
 
-Real-time air quality dashboard and interactive station map for Jakarta, Indonesia.
-Built with Vite + React + TypeScript, Tailwind CSS, Leaflet, Recharts, and TanStack Query.
+Real-time air quality dashboard and interactive station map for Jakarta, Indonesia —
+positioned around protecting children and other sensitive groups.
+Built with Vite + React + TypeScript, Tailwind CSS, Leaflet, Recharts, TanStack Query,
+and a FastAPI + PostgreSQL backend with scheduled ingestion.
 
 ## Features
 

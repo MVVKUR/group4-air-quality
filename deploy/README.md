@@ -12,7 +12,7 @@ pip3 install --user podman-compose
 ## Bring up the app
 
 ```bash
-cd ~/jakarta-air
+cd ~/childair
 
 # Set the WAQI token (free: https://aqicn.org/data-platform/token/)
 echo 'VITE_WAQI_TOKEN=YOUR_TOKEN_HERE' > .env
@@ -30,7 +30,7 @@ App is now reachable at `http://<server-ip>:8080`.
 ## Update / redeploy
 
 ```bash
-cd ~/jakarta-air
+cd ~/childair
 git pull            # if you keep this in git
 podman-compose up -d --build
 ```
@@ -40,7 +40,7 @@ podman-compose up -d --build
 ```bash
 podman-compose down
 # also remove the image:
-podman image rm jakarta-air:latest
+podman image rm childair:latest
 ```
 
 ## Reverse proxy (recommended)
@@ -52,7 +52,7 @@ your reverse proxy can own that header.
 ## Logs
 
 ```bash
-podman logs -f jakarta-air
+podman logs -f childair
 ```
 
 ## Healthcheck

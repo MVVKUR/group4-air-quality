@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Multi-stage build for the Jakarta Air dashboard.
+# Multi-stage build for the ChildAir dashboard (frontend).
 #   Stage 1 (build):  install deps + produce static bundle in /app/dist
 #   Stage 2 (runtime): nginx serving the bundle, SPA fallback to index.html
 
@@ -10,16 +10,13 @@ ARG NGINX_VERSION=1.27-alpine
 FROM docker.io/library/node:${NODE_VERSION} AS build
 WORKDIR /app
 
-# WAQI token is baked into the bundle at build time (Vite VITE_* var).
-ARG VITE_WAQI_TOKEN=""
-ENV VITE_WAQI_TOKEN=${VITE_WAQI_TOKEN}
-
 # Install deps with predictable cache layer.
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 # Copy the rest and build.
 COPY . .
+# Token is no longer baked in — frontend talks to /api/* on the same origin.
 RUN npm run build
 
 # ---------- Stage 2: nginx runtime ------------------------------------------

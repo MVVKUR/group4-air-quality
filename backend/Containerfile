@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1.7
+# ChildAir backend — FastAPI + Postgres + scheduled ingestion.
+#
+# Two-stage build:
+#   builder: installs deps + the project itself into a venv
+#   runtime: copies the venv + source, runs alembic + uvicorn
+
+ARG PYTHON_VERSION=3.12-slim-bookworm
+
+# ---------- Stage 1: build ---------------------------------------------------
+FROM docker.io/library/python:${PYTHON_VERSION} AS build
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update \
+ && apt-get install --no-install-recommends -y build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Pre-copy metadata so dep install caches well.
+COPY pyproject.toml ./
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./
+
+RUN python -m venv /opt/venv \
+ && /opt/venv/bin/pip install --upgrade pip \
+ && /opt/venv/bin/pip install .
+
+# ---------- Stage 2: runtime ------------------------------------------------
+FROM docker.io/library/python:${PYTHON_VERSION} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/opt/venv/bin:$PATH
+
+# Runtime needs only libpq + curl (for healthcheck)
+RUN apt-get update \
+ && apt-get install --no-install-recommends -y libpq5 curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 app
+
+WORKDIR /app
+COPY --from=build /opt/venv /opt/venv
+COPY --from=build /app /app
+
+USER app
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8000/api/v1/health || exit 1
+
+# Apply migrations on every boot (Alembic is idempotent) then launch uvicorn.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

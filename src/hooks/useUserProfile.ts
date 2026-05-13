@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { UserProfile } from '@/types/profile';
 
-const STORAGE_KEY = 'jakarta-air:profile:v1';
+const STORAGE_KEY = 'childair:profile:v1';
 
 function readProfile(): UserProfile | null {
   if (typeof window === 'undefined') return null;

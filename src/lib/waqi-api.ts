@@ -1,124 +1,71 @@
-import type {
-  NormalizedStation,
-  WaqiBoundsStation,
-  WaqiFeed,
-  WaqiResponse,
-} from '@/types/waqi';
-import { JAKARTA_BOUNDS_TUPLE, JAKARTA_FEED_KEY } from './constants';
-import { parseAQI } from './aqi-utils';
-import {
-  MOCK_JAKARTA_FEED,
-  MOCK_JAKARTA_STATIONS,
-  buildMockStationFeed,
-} from '@/mocks/jakarta';
-import {
-  fetchOpenMeteoStationFeed,
-  fetchOpenMeteoStations,
-  isOpenMeteoStationId,
-} from './openmeteo-api';
+import type { NormalizedStation, WaqiFeed } from '@/types/waqi';
 
-const BASE_URL = 'https://api.waqi.info';
+/**
+ * Client wrapper for the ChildAir backend.
+ *
+ * All upstream API calls (WAQI, Open-Meteo) happen server-side. The browser
+ * only ever talks to `/api/v1/*` on the same origin. Function names are kept
+ * stable for backwards compatibility with the rest of the codebase.
+ */
 
-function getToken(): string {
-  return import.meta.env.VITE_WAQI_TOKEN ?? '';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+
+function url(path: string): string {
+  return `${API_BASE}${path}`;
 }
 
-export function isUsingMockData(): boolean {
-  return !getToken();
-}
-
-async function waqiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const token = getToken();
-  if (!token) {
-    throw new Error('WAQI token missing. Set VITE_WAQI_TOKEN in .env.local.');
-  }
-  const sep = path.includes('?') ? '&' : '?';
-  const url = `${BASE_URL}${path}${sep}token=${encodeURIComponent(token)}`;
-  const res = await fetch(url, { signal });
+async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(url(path), {
+    signal,
+    headers: { Accept: 'application/json' },
+  });
   if (!res.ok) {
-    throw new Error(`WAQI request failed: ${res.status} ${res.statusText}`);
+    const detail = await res.text().catch(() => res.statusText);
+    throw new Error(`API ${res.status} ${path}: ${detail}`);
   }
-  const json = (await res.json()) as WaqiResponse<T>;
-  if (json.status !== 'ok') {
-    const detail = typeof json.data === 'string' ? json.data : 'unknown error';
-    throw new Error(`WAQI API error: ${detail}`);
-  }
-  return json.data;
+  return res.json() as Promise<T>;
+}
+
+/** Demo-mode banner is no longer relevant — backend handles all upstream fallbacks. */
+export function isUsingMockData(): boolean {
+  return false;
 }
 
 export async function fetchJakartaFeed(signal?: AbortSignal): Promise<WaqiFeed> {
-  if (isUsingMockData()) return MOCK_JAKARTA_FEED;
-  return waqiFetch<WaqiFeed>(`/feed/${JAKARTA_FEED_KEY}/`, signal);
+  return getJson<WaqiFeed>('/api/v1/feed/jakarta', signal);
 }
 
 export async function fetchStationFeed(
   uid: number,
   signal?: AbortSignal,
 ): Promise<WaqiFeed> {
-  // Open-Meteo synthetic ids (1000-1999) → live model readings per coordinate.
-  if (isOpenMeteoStationId(uid)) return fetchOpenMeteoStationFeed(uid, signal);
-  // Negative ids reserved for legacy demo fallback.
-  if (uid < 0) return buildMockStationFeed(-uid);
-  if (isUsingMockData()) return buildMockStationFeed(uid);
-  // Real WAQI station uid.
-  return waqiFetch<WaqiFeed>(`/feed/@${uid}/`, signal);
+  return getJson<WaqiFeed>(`/api/v1/stations/${uid}`, signal);
 }
 
 export async function fetchStationsInJakarta(
   signal?: AbortSignal,
 ): Promise<NormalizedStation[]> {
-  // Always pull the 24 Open-Meteo neighborhood readings — these are live.
-  // In parallel, try WAQI's bounds endpoint for any official BMKG stations.
-  const [openMeteoStations, waqiStations] = await Promise.all([
-    fetchOpenMeteoStations(signal),
-    fetchWaqiBoundsStations(signal).catch(() => [] as NormalizedStation[]),
-  ]);
-
-  // Prefer WAQI when a live station is close to a neighborhood — it's the
-  // official BMKG sensor reading. Drop the colocated Open-Meteo point so we
-  // don't show two markers on top of each other.
-  const merged: NormalizedStation[] = [...waqiStations];
-  for (const om of openMeteoStations) {
-    const tooClose = waqiStations.some(
-      (w) => Math.hypot(w.lat - om.lat, w.lon - om.lon) < 0.025,
-    );
-    if (!tooClose) merged.push(om);
-  }
-  return merged;
+  return getJson<NormalizedStation[]>('/api/v1/stations', signal);
 }
 
-async function fetchWaqiBoundsStations(
-  signal?: AbortSignal,
-): Promise<NormalizedStation[]> {
-  if (isUsingMockData()) return [];
-  const [s, w, n, e] = JAKARTA_BOUNDS_TUPLE;
-  const path = `/map/bounds/?latlng=${s},${w},${n},${e}`;
-  const stations = await waqiFetch<WaqiBoundsStation[]>(path, signal);
-  return stations.map(normalizeStation).filter((st) => st.aqi !== null);
-}
-
+/**
+ * Used by the "Locate me" flow to snap to the nearest station. The backend
+ * doesn't have a geo endpoint yet, so do the proximity lookup client-side
+ * against the same list we already render.
+ */
 export async function fetchNearestStation(
   lat: number,
   lon: number,
   signal?: AbortSignal,
 ): Promise<WaqiFeed> {
-  if (isUsingMockData()) {
-    const nearest = MOCK_JAKARTA_STATIONS.reduce((acc, st) => {
-      const d = (st.lat - lat) ** 2 + (st.lon - lon) ** 2;
-      return !acc || d < acc.d ? { d, st } : acc;
-    }, null as { d: number; st: WaqiBoundsStation } | null);
-    return buildMockStationFeed(nearest?.st.uid ?? MOCK_JAKARTA_STATIONS[0].uid);
+  const stations = await fetchStationsInJakarta(signal);
+  if (stations.length === 0) {
+    throw new Error('No stations available.');
   }
-  return waqiFetch<WaqiFeed>(`/feed/geo:${lat};${lon}/`, signal);
-}
-
-function normalizeStation(s: WaqiBoundsStation): NormalizedStation {
-  return {
-    uid: s.uid,
-    name: s.station.name,
-    lat: s.lat,
-    lon: s.lon,
-    aqi: parseAQI(s.aqi),
-    updatedAt: s.station.time,
-  };
+  const nearest = stations.reduce((acc, st) => {
+    const d = (st.lat - lat) ** 2 + (st.lon - lon) ** 2;
+    return !acc || d < acc.d ? { d, st } : acc;
+  }, null as { d: number; st: NormalizedStation } | null);
+  if (!nearest) throw new Error('No stations available.');
+  return fetchStationFeed(nearest.st.uid, signal);
 }

@@ -20,12 +20,12 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <NavLink to="/" className="flex items-center gap-2.5">
           <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 via-red-500 to-purple-600 text-white shadow-md">
-            <span className="text-[10px] font-black tracking-tight">JKT</span>
+            <span className="text-[10px] font-black tracking-tight">CA</span>
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-slate-950" />
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-              Jakarta Air
+              ChildAir
             </div>
             <div className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Live AQI

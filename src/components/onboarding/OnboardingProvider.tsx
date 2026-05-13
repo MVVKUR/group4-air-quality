@@ -20,7 +20,7 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
-const SKIP_KEY = 'jakarta-air:onboarding-skipped';
+const SKIP_KEY = 'childair:onboarding-skipped';
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { profile, saveProfile, clearProfile } = useUserProfile();
