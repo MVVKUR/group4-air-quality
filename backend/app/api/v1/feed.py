@@ -6,15 +6,16 @@ The response shape mirrors the original WAQI JSON so the frontend's existing
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
 from app.models import Forecast, Reading, Station
 from app.schemas.feed import (
+    HourlyPoint,
     IAQIValue,
     WaqiAttribution,
     WaqiCity,
@@ -23,6 +24,7 @@ from app.schemas.feed import (
     WaqiForecastPoint,
     WaqiTime,
 )
+from app.services import openmeteo
 
 router = APIRouter()
 
@@ -110,6 +112,40 @@ async def get_jakarta_feed(
             WaqiAttribution(name="BMKG / WAQI", url="https://aqicn.org"),
         ],
     )
+
+
+@router.get(
+    "/feed/jakarta/readings",
+    response_model=list[HourlyPoint],
+    summary="Jakarta hourly AQI trend history",
+)
+async def get_jakarta_feed_readings(
+    hours: int = Query(default=25, ge=1, le=168, description="Lookback window in hours"),
+    session: AsyncSession = Depends(get_session),
+) -> list[HourlyPoint]:
+    """Return the Open-Meteo hourly history used by the dashboard trend chart."""
+    trend_station = openmeteo.JAKARTA_NEIGHBORHOODS[0]
+    station_stmt = select(Station.id).where(
+        Station.source == "openmeteo",
+        Station.source_id == str(trend_station.id),
+    )
+    station_id = (await session.execute(station_stmt)).scalar_one_or_none()
+    if station_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No Open-Meteo history ingested yet — scheduler hasn't completed first run.",
+        )
+
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    reading_stmt = (
+        select(Reading.ts, Reading.aqi)
+        .where(Reading.station_id == station_id)
+        .where(Reading.ts >= since)
+        .where(Reading.aqi.isnot(None))
+        .order_by(Reading.ts.asc())
+    )
+    rows = (await session.execute(reading_stmt)).all()
+    return [HourlyPoint(t=_iso(ts), aqi=int(aqi)) for ts, aqi in rows]
 
 
 def _iso(dt: datetime) -> str:

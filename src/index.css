@@ -1,23 +1,37 @@
-@import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Quicksand:wght@600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   html {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-200;
+    @apply text-slate-900 transition-colors duration-200;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(236, 255, 119, 0.42), transparent 28rem),
+      radial-gradient(circle at 88% 14%, rgba(181, 221, 224, 0.48), transparent 26rem),
+      radial-gradient(circle at 50% 100%, rgba(255, 206, 171, 0.34), transparent 30rem),
+      #f7f2e8;
     margin: 0;
+    min-height: 100vh;
   }
 
   html.dark body {
-    @apply bg-slate-950 text-slate-100;
+    @apply text-slate-100;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(152, 176, 110, 0.18), transparent 28rem),
+      radial-gradient(circle at 88% 14%, rgba(86, 126, 136, 0.24), transparent 26rem),
+      #111827;
+  }
+
+  #root {
+    min-height: 100dvh;
   }
 
   * {
@@ -53,17 +67,29 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-xl bg-white/60 border border-white/40 shadow-xl;
+    @apply backdrop-blur-xl bg-white/60 border border-white/60 shadow-xl;
   }
   .dark .glass {
     @apply bg-slate-900/50 border-white/10;
   }
 
   .card-base {
-    @apply rounded-2xl bg-white border border-slate-200/70 shadow-sm transition-colors;
+    @apply rounded-[1.75rem] border border-white/70 bg-white/75 shadow-[0_18px_45px_rgba(120,103,82,0.10)] backdrop-blur-xl transition-colors;
   }
   .dark .card-base {
-    @apply bg-slate-900 border-slate-800;
+    @apply border-white/10 bg-slate-900/75 shadow-none;
+  }
+
+  .soft-contours {
+    background-image:
+      radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.46), transparent 15rem),
+      repeating-radial-gradient(
+        circle at 76% 36%,
+        rgba(86, 102, 81, 0.12) 0,
+        rgba(86, 102, 81, 0.12) 1px,
+        transparent 1px,
+        transparent 10px
+      );
   }
 
   .skeleton {

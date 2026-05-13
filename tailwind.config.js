@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'Inter',
+          'Plus Jakarta Sans',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -14,6 +14,7 @@ export default {
           'Segoe UI',
           'sans-serif',
         ],
+        display: ['Quicksand', 'Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         aqi: {

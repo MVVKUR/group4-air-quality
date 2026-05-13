@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { useJakartaFeed } from '@/hooks/useAQIData';
+import { useClientLocation } from '@/hooks/useClientLocation';
 import { HeroAQI } from '@/components/dashboard/HeroAQI';
 import { PollutantGrid } from '@/components/dashboard/PollutantGrid';
 import { WeatherStrip } from '@/components/dashboard/WeatherStrip';
@@ -8,11 +10,41 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { HealthAdvisory } from '@/components/shared/HealthAdvisory';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { fetchNearestStation } from '@/lib/waqi-api';
+import { REFRESH_INTERVAL_MS, STALE_TIME_MS } from '@/lib/constants';
 
 export function DashboardPage() {
-  const { data, isLoading, isError, refetch, isFetching } = useJakartaFeed();
+  const jakartaFeed = useJakartaFeed();
+  const location = useClientLocation();
+  const nearestFeed = useQuery({
+    enabled: location !== null,
+    queryKey: ['waqi', 'feed', 'nearest', location?.lat, location?.lon],
+    queryFn: ({ signal }) => {
+      if (!location) throw new Error('Location not available.');
+      return fetchNearestStation(location.lat, location.lon, signal);
+    },
+    refetchInterval: REFRESH_INTERVAL_MS,
+    staleTime: STALE_TIME_MS,
+    refetchOnWindowFocus: false,
+  });
+
+  const data = nearestFeed.data ?? jakartaFeed.data;
+  const isLoading =
+    !data && (jakartaFeed.isLoading || (location !== null && nearestFeed.isLoading));
+  const isError =
+    !data &&
+    (location !== null ? nearestFeed.isError && jakartaFeed.isError : jakartaFeed.isError);
+  const isFetching = jakartaFeed.isFetching || nearestFeed.isFetching;
   const { profile } = useUserProfile();
   const firstName = profile?.name.trim().split(/\s+/)[0] ?? null;
+  const hasLocationFeed = Boolean(location && nearestFeed.data);
+
+  const refetch = () => {
+    void jakartaFeed.refetch();
+    if (location) {
+      void nearestFeed.refetch();
+    }
+  };
 
   if (isLoading) return <DashboardSkeleton />;
   if (isError || !data) {
@@ -29,9 +61,9 @@ export function DashboardPage() {
   return (
     <div className="space-y-4 animate-fade-in sm:space-y-6">
       {firstName && (
-        <div className="-mb-1 text-[13px] font-medium text-slate-500 dark:text-slate-400 sm:text-sm">
-          Halo, <span className="text-slate-900 dark:text-white">{firstName}</span> — here's
-          today's air for Jakarta.
+        <div className="-mb-1 rounded-full border border-white/70 bg-white/45 px-4 py-2 text-[13px] font-bold text-slate-500 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-400 sm:inline-flex sm:text-sm">
+          Halo, <span className="text-slate-900 dark:text-white">{firstName}</span> — here's{' '}
+          {hasLocationFeed ? 'the air near your location.' : "today's air for Jakarta."}
         </div>
       )}
       <HeroAQI feed={data} isRefreshing={isFetching} onRefresh={() => refetch()} />
@@ -40,7 +72,7 @@ export function DashboardPage() {
       <WeatherStrip iaqi={data.iaqi} />
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <TrendChart currentAqi={aqi} stationId={data.idx} />
+          <TrendChart currentAqi={aqi} />
         </div>
         <div className="lg:col-span-2">
           <ForecastCards daily={data.forecast?.daily} />

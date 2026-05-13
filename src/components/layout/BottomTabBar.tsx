@@ -20,7 +20,7 @@ export function BottomTabBar() {
       aria-label="Primary"
       className={cn(
         'safe-pb safe-px fixed inset-x-0 bottom-0 z-40 flex border-t backdrop-blur-xl md:hidden',
-        'border-slate-200 bg-white/85',
+        'border-white/70 bg-[#fbf7ef]/88 shadow-[0_-12px_30px_rgba(120,103,82,0.10)]',
         'dark:border-slate-800 dark:bg-slate-950/90',
       )}
     >
@@ -33,7 +33,7 @@ export function BottomTabBar() {
             cn(
               'relative flex h-[64px] flex-1 flex-col items-center justify-center gap-0.5 transition-colors',
               isActive
-                ? 'text-slate-900 dark:text-white'
+                ? 'text-[#23313a] dark:text-white'
                 : 'text-slate-500 dark:text-slate-400',
             )
           }
@@ -52,7 +52,7 @@ export function BottomTabBar() {
               </span>
               {isActive && (
                 <span
-                  className="absolute top-0 h-[3px] w-8 rounded-full bg-gradient-to-r from-orange-400 via-red-500 to-purple-600"
+                  className="absolute top-0 h-[3px] w-8 rounded-full bg-gradient-to-r from-[#f2ff72] via-[#c9eadf] to-[#8fb3c2]"
                   aria-hidden
                 />
               )}

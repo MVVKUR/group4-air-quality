@@ -18,8 +18,6 @@ import { REFRESH_INTERVAL_MS, STALE_TIME_MS } from '@/lib/constants';
 
 interface TrendChartProps {
   currentAqi: number;
-  /** Station id whose 24-hour history to plot. */
-  stationId: number;
 }
 
 interface ChartDatum {
@@ -28,13 +26,12 @@ interface ChartDatum {
   aqi: number;
 }
 
-export function TrendChart({ currentAqi, stationId }: TrendChartProps) {
+export function TrendChart({ currentAqi }: TrendChartProps) {
   const { data: history, isLoading } = useQuery({
-    queryKey: ['history', stationId],
-    queryFn: ({ signal }) => fetchOpenMeteoHourlyHistory(stationId, signal),
+    queryKey: ['history', 'jakarta'],
+    queryFn: ({ signal }) => fetchOpenMeteoHourlyHistory(signal),
     staleTime: STALE_TIME_MS,
     refetchInterval: REFRESH_INTERVAL_MS,
-    enabled: Number.isFinite(stationId),
   });
 
   const data: ChartDatum[] = useMemo(() => {
@@ -70,7 +67,7 @@ export function TrendChart({ currentAqi, stationId }: TrendChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>24-hour AQI trend</CardTitle>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
+        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
           Open-Meteo · hourly
         </span>
       </CardHeader>
@@ -83,13 +80,13 @@ export function TrendChart({ currentAqi, stationId }: TrendChartProps) {
                 <stop offset="100%" stopColor={aqiHexFor(currentAqi)} stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="rgba(148,163,184,0.15)" vertical={false} />
-            <ReferenceArea y1={0} y2={50} fill="#00E400" fillOpacity={0.07} />
-            <ReferenceArea y1={50} y2={100} fill="#FFD400" fillOpacity={0.08} />
-            <ReferenceArea y1={100} y2={150} fill="#FF7E00" fillOpacity={0.07} />
-            <ReferenceArea y1={150} y2={200} fill="#FF0000" fillOpacity={0.06} />
-            <ReferenceArea y1={200} y2={300} fill="#8F3F97" fillOpacity={0.06} />
-            <ReferenceArea y1={300} y2={upperBound} fill="#7E0023" fillOpacity={0.06} />
+            <CartesianGrid stroke="rgba(122,137,134,0.16)" vertical={false} />
+            <ReferenceArea y1={0} y2={50} fill="#EFFF74" fillOpacity={0.18} />
+            <ReferenceArea y1={50} y2={100} fill="#FFE7A5" fillOpacity={0.14} />
+            <ReferenceArea y1={100} y2={150} fill="#FFC38A" fillOpacity={0.10} />
+            <ReferenceArea y1={150} y2={200} fill="#F49A8D" fillOpacity={0.08} />
+            <ReferenceArea y1={200} y2={300} fill="#C6A4C9" fillOpacity={0.08} />
+            <ReferenceArea y1={300} y2={upperBound} fill="#B58A99" fillOpacity={0.08} />
             <XAxis
               dataKey="hour"
               tick={{ fill: 'currentColor', fontSize: 10 }}
@@ -110,21 +107,21 @@ export function TrendChart({ currentAqi, stationId }: TrendChartProps) {
             <Tooltip
               cursor={{ stroke: 'rgba(148,163,184,0.4)', strokeWidth: 1 }}
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 18,
                 border: 'none',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
-                background: 'rgba(15,23,42,0.92)',
-                color: 'white',
+                boxShadow: '0 18px 40px rgba(82,105,110,0.18)',
+                background: 'rgba(255,255,255,0.94)',
+                color: '#23313a',
                 fontSize: 12,
               }}
-              labelStyle={{ color: '#cbd5e1', fontWeight: 500 }}
+              labelStyle={{ color: '#607f83', fontWeight: 800 }}
               formatter={(value) => [`${value} AQI`, 'AQI']}
             />
             <Area
               type="monotone"
               dataKey="aqi"
               stroke={aqiHexFor(currentAqi)}
-              strokeWidth={2.5}
+              strokeWidth={3}
               fill="url(#aqiArea)"
               activeDot={{ r: 5, strokeWidth: 0 }}
               dot={false}

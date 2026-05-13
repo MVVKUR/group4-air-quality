@@ -24,116 +24,100 @@ export function HeroAQI({ feed, isRefreshing, onRefresh }: HeroAQIProps) {
   return (
     <section
       className={cn(
-        'relative overflow-hidden rounded-3xl p-5 sm:p-8 lg:p-10 text-white animate-fade-in',
-        'bg-gradient-to-br shadow-2xl',
-        cat.gradientClass,
+        'relative overflow-hidden rounded-[2rem] border border-white/70 p-4 text-slate-900 animate-fade-in sm:p-6 lg:p-7',
+        'bg-gradient-to-br from-[#8fa9b6] via-[#c9d9cb] to-[#f7f2d2] shadow-[0_24px_70px_rgba(82,105,110,0.20)]',
+        'dark:border-white/10 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 dark:text-white',
       )}
     >
-      {/* Decorative orbs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/10 blur-3xl sm:h-64 sm:w-64" />
-      <div className="pointer-events-none absolute -bottom-32 -left-16 h-64 w-64 rounded-full bg-black/20 blur-3xl sm:h-72 sm:w-72" />
+      <div className="soft-contours pointer-events-none absolute inset-0 opacity-50" />
+      <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#f2ff72]/55 blur-3xl sm:h-72 sm:w-72" />
+      <div className="pointer-events-none absolute -bottom-24 left-4 h-64 w-64 rounded-full bg-white/35 blur-3xl sm:h-80 sm:w-80" />
 
-      <div className="relative flex flex-col gap-5 md:grid md:grid-cols-[1fr_auto] md:items-end md:gap-8">
+      <div className="relative grid gap-5 lg:grid-cols-[1fr_0.92fr] lg:items-stretch">
         <div className="min-w-0">
           <div
-            className={cn(
-              'flex items-center gap-1.5 text-xs font-medium opacity-90 sm:text-sm',
-              cat.preferDarkText ? 'text-slate-900/85' : 'text-white/85',
-            )}
+            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/45 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-700 backdrop-blur dark:border-white/10 dark:bg-white/10 dark:text-slate-200 sm:text-[13px]"
           >
             <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
             <span className="truncate">{feed.city.name}</span>
           </div>
 
-          <div className="mt-2 flex items-end gap-3 sm:mt-3 sm:gap-4">
-            <div
-              className={cn(
-                // Tighter mobile scale: 320px-friendly. Desktop keeps the
-                // dramatic 8xl headline.
-                'tabular font-black leading-[0.9] tracking-tighter drop-shadow-sm',
-                'text-[68px] sm:text-7xl lg:text-8xl',
-                cat.preferDarkText ? 'text-slate-900' : 'text-white',
-              )}
-            >
-              {aqi ?? '—'}
-            </div>
-            <div
-              className={cn(
-                'mb-1 sm:mb-2',
-                cat.preferDarkText ? 'text-slate-900/80' : 'text-white/85',
-              )}
-            >
-              <div className="text-[10px] uppercase tracking-widest font-semibold sm:text-xs">
-                US AQI
-              </div>
-              <div className="text-sm font-semibold leading-tight sm:text-base sm:font-medium">
-                {cat.label}
-              </div>
-            </div>
+          <div className="mt-5 max-w-xl sm:mt-7">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-slate-700 shadow-sm dark:bg-white/10 dark:text-slate-100">
+              Real-time
+            </span>
+            <h1 className="font-display mt-3 text-[46px] font-bold leading-[0.95] tracking-[-0.04em] text-white drop-shadow-sm sm:text-6xl lg:text-7xl dark:text-slate-50">
+              Air quality care
+            </h1>
+            <p className="mt-4 max-w-lg text-sm font-semibold leading-relaxed text-white/85 sm:text-base dark:text-slate-200">
+              A softer read on today's air, built for family decisions before school runs,
+              walks, and playtime.
+            </p>
           </div>
 
-          {dominant && (
-            <span
-              className={cn(
-                'mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold backdrop-blur sm:mt-5 sm:text-xs',
-                cat.preferDarkText ? 'bg-black/15 text-slate-900' : 'bg-white/15 text-white',
-              )}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              <span className="truncate">{dominant} is the main concern</span>
+          <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-7">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-xs font-extrabold text-slate-700 shadow-sm backdrop-blur dark:bg-white/10 dark:text-slate-100">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: cat.hex }}
+                aria-hidden
+              />
+              {cat.label}
             </span>
-          )}
-
-          <p
-            className={cn(
-              'mt-4 max-w-xl text-[13px] leading-relaxed sm:mt-5 sm:text-[15px]',
-              cat.preferDarkText ? 'text-slate-900/80' : 'text-white/90',
+            {dominant && (
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#23313a]/18 px-3 py-1.5 text-xs font-extrabold text-white backdrop-blur dark:bg-white/10">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f2ff72]" />
+                <span className="truncate">{dominant} is the main concern</span>
+              </span>
             )}
-          >
-            {cat.advisory}
-          </p>
+          </div>
         </div>
 
-        <div
-          className={cn(
-            'flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md',
-            'md:flex-col md:items-end',
-          )}
-        >
-          <div className="min-w-0">
-            <div
-              className={cn(
-                'flex items-center gap-1.5 text-xs font-medium md:justify-end',
-                cat.preferDarkText ? 'text-slate-900/80' : 'text-white/80',
-              )}
-            >
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{timeAgo(feed.time.iso)}</span>
+        <div className="rounded-[1.8rem] border border-white/75 bg-white/78 p-3 shadow-[0_18px_50px_rgba(68,88,91,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 sm:p-4">
+          <div className="soft-contours relative overflow-hidden rounded-[1.5rem] bg-[#f2ff72] p-5 text-slate-950 shadow-inner sm:p-6">
+            <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/35 blur-2xl" />
+            <div className="relative flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.2em] text-slate-700/75">
+                  Current AQI
+                </div>
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="tabular font-display text-[72px] font-bold leading-[0.82] tracking-[-0.06em] sm:text-8xl">
+                    {aqi ?? '—'}
+                  </span>
+                  <span className="mb-2 text-sm font-black uppercase tracking-wider">US AQI</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onRefresh}
+                disabled={!onRefresh || isRefreshing}
+                aria-label="Refresh air quality data"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/85 text-slate-800 shadow-sm transition hover:bg-white active:scale-95 disabled:opacity-60"
+              >
+                <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+              </button>
             </div>
-            <div
-              className={cn(
-                'mt-0.5 truncate text-[11px] md:text-right',
-                cat.preferDarkText ? 'text-slate-900/60' : 'text-white/60',
-              )}
-            >
-              {formatJakartaTime(feed.time.iso)} WIB
+
+            <div className="relative mt-5 rounded-3xl bg-white/55 p-4 text-sm font-bold leading-relaxed text-slate-800 backdrop-blur">
+              {cat.advisory}
             </div>
           </div>
-          {onRefresh && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              aria-label="Refresh air quality data"
-              className={cn(
-                'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/15 text-white transition hover:bg-white/25 active:scale-95 disabled:opacity-60 sm:h-10 sm:w-10',
-                cat.preferDarkText &&
-                  'text-slate-900 border-slate-900/20 bg-slate-900/10 hover:bg-slate-900/20',
-              )}
-            >
-              <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-            </button>
-          )}
+
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-3xl bg-[#f7f2e8]/80 px-4 py-3 text-slate-600 dark:bg-white/10 dark:text-slate-300">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs font-extrabold">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{timeAgo(feed.time.iso)}</span>
+              </div>
+              <div className="mt-0.5 truncate text-[11px] font-bold text-slate-400">
+                {formatJakartaTime(feed.time.iso)} WIB
+              </div>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              Family guide
+            </span>
+          </div>
         </div>
       </div>
     </section>

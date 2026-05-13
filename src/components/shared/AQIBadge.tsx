@@ -19,7 +19,7 @@ export function AQIBadge({ aqi, size = 'md', showLabel = true, className }: AQIB
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-semibold tracking-tight ring-1 ring-inset',
+        'inline-flex items-center gap-1.5 rounded-full font-black tracking-tight shadow-sm ring-1 ring-inset',
         cat.bgClass,
         cat.preferDarkText ? 'text-slate-900' : 'text-white',
         cat.ringClass,
@@ -28,7 +28,7 @@ export function AQIBadge({ aqi, size = 'md', showLabel = true, className }: AQIB
       )}
     >
       {typeof aqi === 'number' ? aqi : '—'}
-      {showLabel && <span className="opacity-90 font-medium">{cat.label}</span>}
+      {showLabel && <span className="font-bold opacity-90">{cat.label}</span>}
     </span>
   );
 }

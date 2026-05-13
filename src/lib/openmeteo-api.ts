@@ -12,17 +12,15 @@ interface HourlyPoint {
 }
 
 /**
- * 24-hour history for a specific station (defaults to Jakarta's primary WAQI
- * station, uid 1 in our DB once the first ingestion run completes).
- * `lat`/`lon` are accepted for source compatibility but unused; the trend
- * chart now passes a `stationId` instead.
+ * Jakarta dashboard trend history. The backend serves this from the fixed
+ * Open-Meteo Bundaran HI hourly-ingestion station, not the latest WAQI feed
+ * station, because WAQI only gives us the current observation.
  */
 export async function fetchOpenMeteoHourlyHistory(
-  stationId: number,
   signal?: AbortSignal,
 ): Promise<HourlyPoint[]> {
   const res = await fetch(
-    `${API_BASE}/api/v1/stations/${stationId}/readings?hours=24`,
+    `${API_BASE}/api/v1/feed/jakarta/readings?hours=25`,
     { signal, headers: { Accept: 'application/json' } },
   );
   if (!res.ok) {

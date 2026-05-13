@@ -4,10 +4,12 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { MapPage } from '@/pages/MapPage';
 import { StationPage } from '@/pages/StationPage';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { LocationReporter } from '@/components/shared/LocationReporter';
 
 function App() {
   return (
     <AppLayout>
+      <LocationReporter />
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<DashboardPage />} />

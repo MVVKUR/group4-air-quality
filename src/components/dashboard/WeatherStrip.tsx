@@ -37,26 +37,25 @@ export function WeatherStrip({ iaqi }: WeatherStripProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="card-base flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
+    <div className="card-base grid grid-cols-2 gap-3 p-3 sm:grid-cols-4">
       {items.map((item, idx) => (
-        <div key={item.key} className="flex items-center gap-3">
-          {idx > 0 && (
-            <div
-              className={cn('hidden h-6 w-px bg-slate-200 dark:bg-slate-800 sm:block')}
-              aria-hidden
-            />
+        <div
+          key={item.key}
+          className={cn(
+            'flex items-center gap-3 rounded-3xl bg-[#f7f2e8]/75 px-3 py-3 text-slate-600',
+            'dark:bg-white/5 dark:text-slate-300',
+            idx === 0 && 'sm:bg-[#eef7df]/80',
           )}
-          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-            <span className="rounded-lg bg-slate-100 p-1.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              {item.icon}
-            </span>
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider">
-                {item.label}
-              </div>
-              <div className="tabular text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {item.value}
-              </div>
+        >
+          <span className="rounded-2xl bg-white p-2 text-[#607f83] shadow-sm dark:bg-slate-900 dark:text-slate-200">
+            {item.icon}
+          </span>
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+              {item.label}
+            </div>
+            <div className="tabular text-base font-black text-slate-800 dark:text-slate-100">
+              {item.value}
             </div>
           </div>
         </div>
