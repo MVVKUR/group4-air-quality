@@ -57,10 +57,12 @@ export function DashboardPage() {
   }
 
   const aqi = typeof data.aqi === 'number' ? data.aqi : 0;
-  // Prefer the displayed station's own forecast; fall back to the Jakarta
-  // city feed (always present) so the outlook never renders empty. The
-  // backend serialises an empty forecast as `{pm25: null, ...}` rather than
-  // omitting it, so check for actual points — not just object presence.
+  // The outlook follows whichever location the dashboard is showing — the
+  // nearest-station feed when location is shared, otherwise the WAQI Jakarta
+  // feed — so the forecast stays consistent with the hero, pollutants, and
+  // the station detail page. The backend serialises an empty forecast as
+  // `{pm25: null, ...}` rather than omitting it, so fall back to the Jakarta
+  // feed only when the displayed station has no forecast points at all.
   const stationForecast = data.forecast?.daily;
   const hasStationForecast = Boolean(
     stationForecast?.pm25?.length ||
@@ -70,6 +72,9 @@ export function DashboardPage() {
   const forecastDaily = hasStationForecast
     ? stationForecast
     : jakartaFeed.data?.forecast?.daily;
+  const forecastSource = hasStationForecast
+    ? data.attributions?.[0]?.name
+    : jakartaFeed.data?.attributions?.[0]?.name;
 
   return (
     <div className="space-y-4 animate-fade-in sm:space-y-6">
@@ -83,14 +88,8 @@ export function DashboardPage() {
       {profile && <HealthAdvisory aqi={aqi} />}
       <PollutantGrid iaqi={data.iaqi} dominant={data.dominentpol} />
       <WeatherStrip iaqi={data.iaqi} />
-      <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <TrendChart currentAqi={aqi} />
-        </div>
-        <div className="lg:col-span-2">
-          <ForecastCards daily={forecastDaily} />
-        </div>
-      </div>
+      <TrendChart currentAqi={aqi} />
+      <ForecastCards daily={forecastDaily} source={forecastSource} />
     </div>
   );
 }

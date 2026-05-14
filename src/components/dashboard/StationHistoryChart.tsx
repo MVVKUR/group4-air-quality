@@ -17,6 +17,8 @@ import type { WaqiForecastDaily } from '@/types/waqi';
 interface StationHistoryChartProps {
   daily: WaqiForecastDaily | undefined;
   currentAqi: number;
+  /** Attribution for the forecast model, shown in the header. */
+  source?: string;
 }
 
 interface Point {
@@ -27,7 +29,11 @@ interface Point {
   o3?: number;
 }
 
-export function StationHistoryChart({ daily, currentAqi }: StationHistoryChartProps) {
+export function StationHistoryChart({
+  daily,
+  currentAqi,
+  source,
+}: StationHistoryChartProps) {
   const data: Point[] = useMemo(() => {
     if (!daily) return [];
     const map = new Map<string, Point>();
@@ -53,6 +59,11 @@ export function StationHistoryChart({ daily, currentAqi }: StationHistoryChartPr
     <Card>
       <CardHeader>
         <CardTitle>{data.length}-day forecast (per pollutant)</CardTitle>
+        {source && (
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Source: {source}
+          </span>
+        )}
       </CardHeader>
       <div className="-mx-2 h-72">
         <ResponsiveContainer width="100%" height="100%">

@@ -1,5 +1,4 @@
 import { Card, CardHeader, CardTitle } from '@/components/shared/Card';
-import { AQIBadge } from '@/components/shared/AQIBadge';
 import { getAQICategory } from '@/lib/aqi-utils';
 import { cn } from '@/lib/cn';
 import { MAX_FORECAST_DAYS, dayName, isTodayOrLater } from '@/lib/forecast-utils';
@@ -7,6 +6,8 @@ import type { WaqiForecastDaily, WaqiForecastPoint } from '@/types/waqi';
 
 interface ForecastCardsProps {
   daily: WaqiForecastDaily | undefined;
+  /** Attribution for the forecast model, shown in the header. */
+  source?: string;
 }
 
 interface DayForecast {
@@ -32,7 +33,7 @@ function combine(daily: WaqiForecastDaily | undefined): DayForecast[] {
     .slice(0, MAX_FORECAST_DAYS);
 }
 
-export function ForecastCards({ daily }: ForecastCardsProps) {
+export function ForecastCards({ daily, source }: ForecastCardsProps) {
   const days = combine(daily);
   if (days.length === 0) return null;
 
@@ -40,11 +41,13 @@ export function ForecastCards({ daily }: ForecastCardsProps) {
     <Card>
       <CardHeader>
         <CardTitle>{days.length}-day outlook</CardTitle>
-        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-          Source: WAQI forecast
-        </span>
+        {source && (
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Source: {source}
+          </span>
+        )}
       </CardHeader>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {days.map((d) => {
           const value = d.pm25 ?? d.pm10 ?? d.o3;
           if (!value) return null;
@@ -52,29 +55,40 @@ export function ForecastCards({ daily }: ForecastCardsProps) {
           return (
             <div
               key={d.day}
-              className="group relative overflow-hidden rounded-[1.45rem] border border-white/70 bg-[#fbf8ef]/80 p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white/90 dark:border-white/10 dark:bg-white/5"
+              className={cn(
+                'flex flex-col rounded-2xl border border-white/80 bg-white p-4 shadow-sm transition',
+                'hover:-translate-y-0.5 hover:shadow-md',
+                'dark:border-white/10 dark:bg-white/[0.04]',
+              )}
             >
-              <div className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-[#f2ff72]/35 blur-xl" />
-              <div className="relative flex items-center justify-between gap-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-300">
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <span className={cn('h-2 w-2 shrink-0 rounded-full', cat.bgClass)} />
-                  <span className="truncate">{dayName(d.day)}</span>
-                </span>
-                <AQIBadge aqi={value.avg} size="sm" showLabel={false} />
+              <div className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                {dayName(d.day)}
               </div>
+
               <div
                 className={cn(
-                  'tabular font-display relative mt-3 text-4xl font-bold leading-none tracking-tight',
+                  'tabular font-display mt-3 text-[2.6rem] font-bold leading-none tracking-tight',
                   cat.textClass,
                 )}
               >
                 {value.avg}
               </div>
-              <div className="relative mt-2 text-[11px] font-bold leading-snug text-slate-500 dark:text-slate-400">
-                {value.min}–{value.max}
-                <span className="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">
-                  {cat.label}
+
+              <span
+                className={cn(
+                  'mt-3 inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em]',
+                  cat.bgClass,
+                  cat.preferDarkText ? 'text-slate-900' : 'text-white',
+                )}
+              >
+                {cat.label}
+              </span>
+
+              <div className="mt-3 flex items-baseline gap-1 text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                <span className="tabular">
+                  {value.min}–{value.max}
                 </span>
+                <span className="text-[9px] font-black uppercase tracking-wider">AQI range</span>
               </div>
             </div>
           );

@@ -72,6 +72,7 @@ export function StationPage() {
               <StationHistoryChart
                 daily={data.forecast?.daily}
                 currentAqi={typeof data.aqi === 'number' ? data.aqi : 100}
+                source={data.attributions?.[0]?.name}
               />
             </div>
             <div className="lg:col-span-2">
