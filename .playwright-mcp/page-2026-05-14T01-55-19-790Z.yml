@@ -1,0 +1,38 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "ChildAir Family AQI" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - generic [ref=e10]:
+          - generic [ref=e11]: ChildAir
+          - generic [ref=e12]: Family AQI
+      - navigation "Primary" [ref=e13]:
+        - link "Dashboard" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - img [ref=e15]
+          - generic [ref=e20]: Dashboard
+        - link "Map" [ref=e21] [cursor=pointer]:
+          - /url: /map
+          - img [ref=e22]
+          - generic [ref=e24]: Map
+      - generic [ref=e25]:
+        - button "Set up profile" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+        - button "Switch to dark mode" [ref=e30] [cursor=pointer]:
+          - img [ref=e31]
+  - main [ref=e33]
+  - contentinfo [ref=e48]:
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - text: "Data:"
+        - link "World Air Quality Index Project (aqicn.org)" [ref=e51] [cursor=pointer]:
+          - /url: https://aqicn.org
+          - text: World Air Quality Index Project (aqicn.org)
+          - img [ref=e52]
+        - text: · Tiles ©
+        - link "OpenStreetMap" [ref=e56] [cursor=pointer]:
+          - /url: https://www.openstreetmap.org/copyright
+      - generic [ref=e57]:
+        - generic [ref=e58]: Built with Vite + React
+        - img [ref=e59]

@@ -1,12 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap,
-} from 'react-leaflet';
-import L from 'leaflet';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import type L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import {
@@ -28,8 +22,15 @@ interface JakartaMapProps {
 
 export function JakartaMap({ stations }: JakartaMapProps) {
   const [layer, setLayer] = useState<TileLayerKey>('street');
-  const [activeUid, setActiveUid] = useState<number | null>(null);
-  const popupRefs = useRef(new Map<number, L.Popup>());
+
+  /**
+   * Hold the live `L.Marker` for every station so external triggers (search
+   * result click, locate-me) can open its popup imperatively via the safe
+   * `marker.openPopup()` API. We deliberately *don't* hold `L.Popup` refs —
+   * a closed popup has no `_map`, so calling `popup.openOn(popup._map)` blows
+   * up with "Cannot read properties of undefined (reading 'hasLayer')".
+   */
+  const markerRefs = useRef(new Map<number, L.Marker>());
 
   const peakStation = useMemo(() => {
     return stations.reduce<NormalizedStation | null>((acc, s) => {
@@ -38,6 +39,11 @@ export function JakartaMap({ stations }: JakartaMapProps) {
       return acc;
     }, null);
   }, [stations]);
+
+  const handleSelectStation = useCallback((s: NormalizedStation) => {
+    const marker = markerRefs.current.get(s.uid);
+    marker?.openPopup();
+  }, []);
 
   return (
     <div className="relative h-[calc(100dvh-220px)] min-h-[420px] overflow-hidden rounded-2xl border border-slate-200 shadow-xl dark:border-slate-800 sm:rounded-3xl sm:min-h-[520px]">
@@ -65,22 +71,16 @@ export function JakartaMap({ stations }: JakartaMapProps) {
               key={station.uid}
               position={[station.lat, station.lon]}
               icon={icon}
-              ref={(ref) => {
-                if (ref) {
-                  ref.on('popupopen', () => setActiveUid(station.uid));
-                  ref.on('popupclose', () =>
-                    setActiveUid((u) => (u === station.uid ? null : u)),
-                  );
+              ref={(instance) => {
+                if (instance) {
+                  markerRefs.current.set(station.uid, instance);
+                } else {
+                  // ref cleanup on unmount — keep the map tidy
+                  markerRefs.current.delete(station.uid);
                 }
               }}
             >
-              <Popup
-                ref={(ref) => {
-                  if (ref) popupRefs.current.set(station.uid, ref);
-                }}
-                closeButton={false}
-                offset={[0, -4]}
-              >
+              <Popup closeButton={false} offset={[0, -4]}>
                 <StationPopup station={station} />
               </Popup>
             </Marker>
@@ -91,32 +91,11 @@ export function JakartaMap({ stations }: JakartaMapProps) {
           layer={layer}
           onLayerChange={setLayer}
           stations={stations}
-          onSelectStation={(s) => {
-            const popup = popupRefs.current.get(s.uid);
-            if (popup) popup.openOn((popup as unknown as { _map: L.Map })._map);
-          }}
+          onSelectStation={handleSelectStation}
         />
-
-        <ProgrammaticPopup activeUid={activeUid} popupRefs={popupRefs.current} />
       </MapContainer>
 
       <MapLegend className="absolute bottom-3 right-3 z-[400] sm:bottom-4 sm:right-4" />
     </div>
   );
-}
-
-function ProgrammaticPopup({
-  activeUid,
-  popupRefs,
-}: {
-  activeUid: number | null;
-  popupRefs: Map<number, L.Popup>;
-}) {
-  // Used for keyboard accessibility hooks; we just need access to map for now.
-  useMap();
-  useEffect(() => {
-    if (activeUid === null) return;
-    popupRefs.get(activeUid)?.bringToFront?.();
-  }, [activeUid, popupRefs]);
-  return null;
 }

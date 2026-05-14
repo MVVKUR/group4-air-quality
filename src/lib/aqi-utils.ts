@@ -167,15 +167,6 @@ export function pollutantSeverityPct(value: number, max = 300): number {
   return Math.max(0, Math.min(100, (value / max) * 100));
 }
 
-export function parseAQI(value: number | string | null | undefined): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-  const trimmed = value.trim();
-  if (trimmed === '' || trimmed === '-') return null;
-  const n = Number(trimmed);
-  return Number.isFinite(n) ? n : null;
-}
-
 export const DOMINANT_POLLUTANT_LABELS: Record<string, string> = {
   pm25: 'PM2.5',
   pm10: 'PM10',

@@ -51,22 +51,6 @@ export interface WaqiFeed {
   attributions?: WaqiAttribution[];
 }
 
-export interface WaqiBoundsStation {
-  lat: number;
-  lon: number;
-  uid: number;
-  aqi: string;
-  station: {
-    name: string;
-    time: string;
-  };
-}
-
-export type WaqiResponse<T> =
-  | { status: 'ok'; data: T }
-  | { status: 'error'; data: string }
-  | { status: 'nug'; data: string };
-
 export interface NormalizedStation {
   uid: number;
   name: string;

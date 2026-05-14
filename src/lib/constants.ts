@@ -3,17 +3,11 @@ import type { LatLngBoundsExpression, LatLngExpression } from 'leaflet';
 export const JAKARTA_CENTER: LatLngExpression = [-6.2088, 106.8456];
 export const JAKARTA_DEFAULT_ZOOM = 11;
 
-// Greater Jakarta bounding box: south, west, north, east
-export const JAKARTA_BOUNDS_TUPLE: [number, number, number, number] = [
-  -6.55, 106.55, -5.95, 107.15,
-];
-
+// Greater Jakarta bounding box for Leaflet maxBounds — south,west / north,east
 export const JAKARTA_BOUNDS: LatLngBoundsExpression = [
-  [JAKARTA_BOUNDS_TUPLE[0], JAKARTA_BOUNDS_TUPLE[1]],
-  [JAKARTA_BOUNDS_TUPLE[2], JAKARTA_BOUNDS_TUPLE[3]],
+  [-6.55, 106.55],
+  [-5.95, 107.15],
 ];
-
-export const JAKARTA_FEED_KEY = 'jakarta';
 
 // Refresh cadence (ms) — WAQI updates ~hourly so 5 min is plenty
 export const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
