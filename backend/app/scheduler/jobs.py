@@ -99,7 +99,7 @@ def start() -> AsyncIOScheduler:
         **common_kwargs,
     )
     sched.add_job(
-        _wrap("openmeteo_history", ingestion.ingest_openmeteo_history_for_jakarta),
+        _wrap("openmeteo_history", ingestion.ingest_openmeteo_history),
         id="openmeteo_history",
         **common_kwargs,
     )

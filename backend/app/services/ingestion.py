@@ -85,12 +85,21 @@ async def ingest_openmeteo_current() -> int:
     return await _upsert_openmeteo_current(locations)
 
 
-async def ingest_openmeteo_history_for_jakarta() -> int:
-    """Hourly history + forecast for Jakarta city center (Bundaran HI)."""
-    center = openmeteo.JAKARTA_NEIGHBORHOODS[0]  # Bundaran HI
+async def ingest_openmeteo_history() -> int:
+    """Hourly history + multi-day forecast for every Jakarta neighborhood.
+
+    One batched Open-Meteo call covers all 24 sampling points, so every station
+    detail page and the location-aware dashboard get a real forecast — not just
+    Jakarta city center.
+    """
     async with httpx.AsyncClient() as client:
-        loc = await openmeteo.fetch_hourly_with_forecast(client, center.lat, center.lon)
-    return await _upsert_openmeteo_hourly(center, loc)
+        locations = await openmeteo.fetch_batch_hourly_with_forecast(client)
+    total = 0
+    for nb, loc in zip(openmeteo.JAKARTA_NEIGHBORHOODS, locations, strict=False):
+        if not loc:
+            continue
+        total += await _upsert_openmeteo_hourly(nb, loc)
+    return total
 
 
 # ---------------------------------------------------------------------------
@@ -524,7 +533,7 @@ async def run_all_jobs() -> dict[str, int]:
         ("waqi_jakarta_feed", ingest_waqi_jakarta_feed),
         ("waqi_bounds", ingest_waqi_bounds),
         ("openmeteo_current", ingest_openmeteo_current),
-        ("openmeteo_history", ingest_openmeteo_history_for_jakarta),
+        ("openmeteo_history", ingest_openmeteo_history),
     ):
         try:
             results[name] = await fn()

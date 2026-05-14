@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { Card, CardHeader, CardTitle } from '@/components/shared/Card';
 import { aqiHexFor } from '@/lib/aqi-utils';
+import { MAX_FORECAST_DAYS, dayName, isTodayOrLater } from '@/lib/forecast-utils';
 import type { WaqiForecastDaily } from '@/types/waqi';
 
 interface StationHistoryChartProps {
@@ -34,20 +35,16 @@ export function StationHistoryChart({ daily, currentAqi }: StationHistoryChartPr
       for (const point of daily[key] ?? []) {
         const existing =
           map.get(point.day) ??
-          ({
-            day: point.day,
-            label: new Date(point.day).toLocaleDateString('en-GB', {
-              weekday: 'short',
-              day: '2-digit',
-            }),
-          } as Point);
+          ({ day: point.day, label: dayName(point.day) } as Point);
         existing[key] = point.avg;
         map.set(point.day, existing);
       }
     }
+    // Same window as the dashboard's ForecastCards: today onward only.
     return Array.from(map.values())
+      .filter((p) => isTodayOrLater(p.day))
       .sort((a, b) => a.day.localeCompare(b.day))
-      .slice(0, 7);
+      .slice(0, MAX_FORECAST_DAYS);
   }, [daily]);
 
   if (data.length === 0) return null;
@@ -55,7 +52,7 @@ export function StationHistoryChart({ daily, currentAqi }: StationHistoryChartPr
   return (
     <Card>
       <CardHeader>
-        <CardTitle>7-day forecast (per pollutant)</CardTitle>
+        <CardTitle>{data.length}-day forecast (per pollutant)</CardTitle>
       </CardHeader>
       <div className="-mx-2 h-72">
         <ResponsiveContainer width="100%" height="100%">

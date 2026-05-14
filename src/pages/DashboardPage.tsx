@@ -57,6 +57,19 @@ export function DashboardPage() {
   }
 
   const aqi = typeof data.aqi === 'number' ? data.aqi : 0;
+  // Prefer the displayed station's own forecast; fall back to the Jakarta
+  // city feed (always present) so the outlook never renders empty. The
+  // backend serialises an empty forecast as `{pm25: null, ...}` rather than
+  // omitting it, so check for actual points — not just object presence.
+  const stationForecast = data.forecast?.daily;
+  const hasStationForecast = Boolean(
+    stationForecast?.pm25?.length ||
+      stationForecast?.pm10?.length ||
+      stationForecast?.o3?.length,
+  );
+  const forecastDaily = hasStationForecast
+    ? stationForecast
+    : jakartaFeed.data?.forecast?.daily;
 
   return (
     <div className="space-y-4 animate-fade-in sm:space-y-6">
@@ -75,7 +88,7 @@ export function DashboardPage() {
           <TrendChart currentAqi={aqi} />
         </div>
         <div className="lg:col-span-2">
-          <ForecastCards daily={data.forecast?.daily} />
+          <ForecastCards daily={forecastDaily} />
         </div>
       </div>
     </div>

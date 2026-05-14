@@ -88,28 +88,35 @@ async def fetch_batch_current(
     return body if isinstance(body, list) else [body]
 
 
-async def fetch_hourly_with_forecast(
+async def fetch_batch_hourly_with_forecast(
     client: httpx.AsyncClient,
-    lat: float,
-    lon: float,
     *,
     past_days: int = 1,
+    # CAMS air-quality model only forecasts ~5 days out — requesting more just
+    # returns null-padded slots. ForecastCards caps display at 7 regardless.
     forecast_days: int = 5,
-) -> dict[str, Any]:
-    """Returns hourly history + multi-day forecast for one coordinate."""
+) -> list[dict[str, Any]]:
+    """Batched hourly history + multi-day forecast for every neighborhood.
+
+    One request covers all sampling points — Open-Meteo returns a list of
+    location objects in JAKARTA_NEIGHBORHOODS order, each with its own
+    `hourly` block spanning `past_days` back through `forecast_days` ahead.
+    """
+    lats = ",".join(str(n.lat) for n in JAKARTA_NEIGHBORHOODS)
+    lons = ",".join(str(n.lon) for n in JAKARTA_NEIGHBORHOODS)
     params = {
-        "latitude": str(lat),
-        "longitude": str(lon),
+        "latitude": lats,
+        "longitude": lons,
         "current": ",".join(CURRENT_FIELDS),
         "hourly": ",".join(HOURLY_FIELDS),
         "past_days": str(past_days),
         "forecast_days": str(forecast_days),
         "timezone": "Asia/Jakarta",
     }
-    resp = await client.get(settings.openmeteo_base_url, params=params, timeout=15.0)
+    resp = await client.get(settings.openmeteo_base_url, params=params, timeout=30.0)
     resp.raise_for_status()
     body = resp.json()
-    return body[0] if isinstance(body, list) else body
+    return body if isinstance(body, list) else [body]
 
 
 def find_neighborhood(neighborhood_id: int) -> Neighborhood | None:
